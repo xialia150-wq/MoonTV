@@ -77,6 +77,11 @@ const isCloudflarePages = process.env.CF_PAGES === '1' ||
   process.env.CLOUDFLARE_PAGES === '1' ||
   process.argv.includes('pages:build');
 
+// next-on-pages consumes the standard Next.js output, not a standalone server.
+if (isCloudflarePages) {
+  nextConfig.output = undefined;
+}
+
 const isVercel = process.env.VERCEL === '1';
 const isNetlify = process.env.NETLIFY === 'true';
 
