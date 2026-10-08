@@ -1,7 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import type { Metadata, Viewport } from 'next';
+import { unstable_noStore as noStore } from 'next/cache';
 import { Inter } from 'next/font/google';
+import { Suspense } from 'react';
 
 import './globals.css';
 import 'sweetalert2/dist/sweetalert2.min.css';
@@ -20,14 +22,13 @@ import SubscriptionAutoUpdate from '../components/SubscriptionAutoUpdate';
 import { ThemeProvider } from '../components/ThemeProvider';
 import UserOnlineUpdate from '../components/UserOnlineUpdate';
 
-export const runtime = 'edge';
-
 const inter = Inter({ subsets: ['latin'] });
 
 // 动态生成 metadata，支持配置更新后的标题变化
 export async function generateMetadata(): Promise<Metadata> {
   let siteName = process.env.NEXT_PUBLIC_SITE_NAME || 'MoonTV';
-  if (process.env.NEXT_PUBLIC_STORAGE_TYPE !== 'localstorage') {
+  if ((process.env.NEXT_PUBLIC_STORAGE_TYPE || 'localstorage') !== 'localstorage') {
+    noStore();
     const config = await getConfig();
     siteName = config.SiteConfig.SiteName;
   }
@@ -70,6 +71,8 @@ export default async function RootLayout({
     getDefaultPlaybackSaveInterval(storageType);
   let autoUpdateEnabled = false;
   if (storageType !== 'localstorage') {
+    // Database settings still need to be read for each request.
+    noStore();
     const config = await getConfig();
     siteName = config.SiteConfig.SiteName;
     announcement = config.SiteConfig.Announcement;
@@ -135,7 +138,9 @@ export default async function RootLayout({
               <UserOnlineUpdate />
               
               {/* 条件导航栏 - 根据路径自动判断是否显示 */}
-              <ConditionalNav />
+              <Suspense fallback={null}>
+                <ConditionalNav />
+              </Suspense>
               
               {/* 全局下载管理器 - 只渲染一次，被所有导航栏共享 */}
               <GlobalDownloadManager />
