@@ -7,7 +7,7 @@
 import CryptoJS from 'crypto-js';
 
 import { inferHeightFromBitrate } from './hls-quality';
-import { StreamingTransmuxer, transmuxTSToMP4 } from './mp4-transmuxer';
+import type { StreamingTransmuxer } from './mp4-transmuxer';
 
 export type StreamSaverMode = 'disabled' | 'service-worker' | 'file-system';
 
@@ -584,6 +584,7 @@ export async function downloadM3U8Video(
 
         // 如果是 MP4 格式，初始化流式转码器
         if (task.type === 'MP4') {
+          const { StreamingTransmuxer } = await import('./mp4-transmuxer');
           streamingTransmuxer = new StreamingTransmuxer(writer, rangeDuration);
           // eslint-disable-next-line no-console
           console.log('✅ 启用 MP4 流式转码');
@@ -1016,6 +1017,7 @@ export async function downloadM3U8Video(
   // 如果是 MP4 格式，进行转码
   let blob: Blob;
   if (task.type === 'MP4') {
+    const { transmuxTSToMP4 } = await import('./mp4-transmuxer');
     // 传递范围内片段的实际时长累加值
     const actualDuration = task.segmentDurations.slice(startSegment - 1, endSegment).reduce((a, b) => a + b, 0);
     blob = transmuxTSToMP4(segments, actualDuration);
